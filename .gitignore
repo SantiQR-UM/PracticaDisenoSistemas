@@ -1,3 +1,9 @@
+#OTROS
+.claude
+idea.md
+.git
+.gitignore
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
