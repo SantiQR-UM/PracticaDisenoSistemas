@@ -199,16 +199,64 @@ def main():
     print()
 
     # =========================================================================
-    # PATRON OBSERVER: Sistema de sensores (preparado para expansion)
+    # PATRON OBSERVER: Sistema de sensores en accion
     # =========================================================================
     imprimir_separador("PATRON OBSERVER: Sistema de sensores", "-")
 
-    print("\n[INFO] El sistema esta preparado para integrar sensores:")
-    print("  - Sensores de ocupacion de plazas")
-    print("  - Camaras lectoras de patente")
-    print("  - Sensores de seguridad")
-    print("  - Todos implementando el patron Observer")
+    # Importar sensores
+    from python_estacionamiento.sensores.sensor_ocupacion import SensorOcupacion
+    from python_estacionamiento.sensores.sensor_camara import SensorCamara
+    from python_estacionamiento.sensores.sensor_seguridad import SensorSeguridad
 
+    print("\n4. Inicializando sensores del estacionamiento...")
+    print()
+
+    # Crear sensores (Observers)
+    sensor_ocupacion = SensorOcupacion(umbral_critico=10)
+    sensor_camara = SensorCamara(ubicacion="Principal")
+    sensor_seguridad = SensorSeguridad()
+
+    print()
+
+    # Suscribir sensores al parking manager (Observable)
+    parking_manager.agregar_observador(sensor_ocupacion)
+    parking_manager.agregar_observador(sensor_camara)
+    parking_manager.agregar_observador(sensor_seguridad)
+
+    print("\n[OK] OBSERVER verificado: 3 sensores suscritos al estacionamiento")
+    print()
+
+    # Resetear el parking para demostrar sensores
+    parking_manager.reset()
+
+    print("\n5. Demostrando sensores en tiempo real...")
+    imprimir_separador("", "-")
+
+    # Crear nuevos vehiculos para demostrar sensores
+    print("\n--- Ingresando vehiculos (sensores activos) ---\n")
+
+    moto2 = VehiculoFactory.crear_vehiculo("Moto", "MOT999")
+    auto2 = VehiculoFactory.crear_vehiculo("Auto", "AUT888")
+    camioneta2 = VehiculoFactory.crear_vehiculo("Camioneta", "CAM777")
+
+    parking_manager.ingresar_vehiculo(moto2)
+    print()
+
+    parking_manager.ingresar_vehiculo(auto2)
+    print()
+
+    parking_manager.ingresar_vehiculo(camioneta2)
+    print()
+
+    print("--- Egresando vehiculos (sensores activos) ---\n")
+
+    parking_manager.egresar_vehiculo(moto2.get_patente())
+    print()
+
+    parking_manager.egresar_vehiculo(auto2.get_patente())
+    print()
+
+    print("[OK] OBSERVER verificado: Sensores notificados de todos los eventos")
     print()
 
     # =========================================================================
@@ -218,7 +266,7 @@ def main():
 
     print("\n  [OK] SINGLETON   - ParkingLotManager y PricingRegistry (instancias unicas)")
     print("  [OK] FACTORY     - Creacion de vehiculos (Moto, Auto, Camioneta)")
-    print("  [OK] OBSERVER    - Sistema de sensores con metodos en español (preparado)")
+    print("  [OK] OBSERVER    - Sistema de sensores funcionando (Ocupacion, Camaras, Seguridad)")
     print("  [OK] STRATEGY    - Estrategias de precio (Estandar, Happy Hour, Valet, Evento)")
 
     imprimir_separador()
@@ -227,9 +275,12 @@ def main():
     print("  - python_estacionamiento/entidades/     : Entidades de dominio")
     print("  - python_estacionamiento/servicios/     : Servicios de negocio")
     print("  - python_estacionamiento/patrones/      : Implementaciones de patrones")
-    print("  - python_estacionamiento/sensores/      : Sistema de sensores (para expansion)")
+    print("  - python_estacionamiento/sensores/      : Sistema de sensores (IMPLEMENTADO)")
+    print("  - python_estacionamiento/persistencia/  : Sistema de persistencia JSON (IMPLEMENTADO)")
+    print("  - python_estacionamiento/utils/         : Sistema de logging (IMPLEMENTADO)")
     print("  - python_estacionamiento/excepciones/   : Excepciones personalizadas")
     print("  - python_estacionamiento/constantes.py  : Constantes centralizadas")
+    print("  - tests/                                : Suite completa de tests unitarios")
     print()
 
 

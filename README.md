@@ -39,10 +39,21 @@ El sistema **PythonEstacionamiento** aborda los desafios de la gestion moderna d
    - Descuentos y recargos segun condiciones
    - Calculo automatico basado en tiempo de estadia
 
-4. **Sistema Extensible**
-   - Preparado para sensores de ocupacion
-   - Arquitectura lista para camaras de patentes
-   - Patron Observer implementado para eventos
+4. **Sistema de Monitoreo con Sensores**
+   - Sensores de ocupacion en tiempo real
+   - Camaras de lectura de patentes
+   - Sistema de seguridad automatizado
+   - Patron Observer implementado y funcionando
+
+5. **Persistencia de Datos**
+   - Sistema de guardado/carga en JSON
+   - Recuperacion automatica del estado
+   - Manejo robusto de errores
+
+6. **Sistema de Logging**
+   - Registro de eventos en archivo y consola
+   - Trazabilidad completa de operaciones
+   - Niveles de log configurables
 
 ---
 
@@ -125,11 +136,13 @@ vehiculo = VehiculoFactory.crear_vehiculo("Auto", "ABC123")
 
 ### 3. OBSERVER Pattern
 
-**Ubicacion**: `python_estacionamiento/patrones/observer/`
+**Ubicacion**:
+- `python_estacionamiento/patrones/observer/` - Patron base
+- `python_estacionamiento/sensores/` - Sensores concretos
 
 **Problema que resuelve**:
 - Notificacion automatica a multiples observadores
-- Desacoplamiento entre sensores y consumidores
+- Desacoplamiento entre sensores y eventos del estacionamiento
 - Sistema de eventos tipo-seguro
 
 **Implementacion**:
@@ -147,11 +160,29 @@ class Observable(Generic[T], ABC):
             observador.actualizar(evento)
 ```
 
+**Sensores Implementados**:
+- **SensorOcupacion**: Monitorea plazas disponibles y alertas de capacidad
+- **SensorCamara**: Registra patentes de entrada y salida
+- **SensorSeguridad**: Controla accesos y genera alertas de seguridad
+
+**Uso en el sistema**:
+```python
+# El ParkingLotManager es Observable
+parking_manager = ParkingLotManager.get_instance()
+
+# Los sensores son Observers
+sensor_ocupacion = SensorOcupacion()
+parking_manager.agregar_observador(sensor_ocupacion)
+
+# Notificacion automatica al ingresar vehiculo
+parking_manager.ingresar_vehiculo(vehiculo)  # Sensores notificados
+```
+
 **Ventajas**:
 - Tipo-seguro con Generics
 - Desacoplamiento total
 - Multiples observadores permitidos
-- Preparado para expansion con sensores reales
+- Sistema completamente funcional y extensible
 
 ---
 
@@ -253,7 +284,8 @@ PythonEstacionamiento/
 +-- README.md                        # Este archivo
 +-- idea.md                          # Documento de diseno original
 |
-+-- data/                            # Datos persistidos (para expansion futura)
++-- data/                            # Datos persistidos en JSON
++-- logs/                            # Archivos de log del sistema
 |
 +-- python_estacionamiento/          # Paquete principal
     |
@@ -297,15 +329,37 @@ PythonEstacionamiento/
     |
     +-- servicios/                   # Logica de negocio
     |   +-- __init__.py
-    |   +-- parking_lot_manager.py  # Gestor Singleton del estacionamiento
+    |   +-- parking_lot_manager.py  # Gestor Singleton del estacionamiento (Observable)
     |   +-- pricing_registry.py     # Registro Singleton de estrategias
     |
-    +-- sensores/                    # Sistema de sensores (preparado)
+    +-- sensores/                    # Sistema de sensores (IMPLEMENTADO)
     |   +-- __init__.py
+    |   +-- eventos.py               # Eventos del estacionamiento
+    |   +-- sensor_ocupacion.py     # Sensor de ocupacion de plazas
+    |   +-- sensor_camara.py        # Sensor de lectura de patentes
+    |   +-- sensor_seguridad.py     # Sensor de seguridad
+    |
+    +-- persistencia/                # Sistema de persistencia (IMPLEMENTADO)
+    |   +-- __init__.py
+    |   +-- json_storage.py         # Guardado/carga en JSON
+    |
+    +-- utils/                       # Utilidades del sistema (IMPLEMENTADO)
+    |   +-- __init__.py
+    |   +-- logger.py                # Sistema de logging centralizado
     |
     +-- excepciones/                 # Excepciones personalizadas
         +-- __init__.py
         +-- estacionamiento_exception.py
+|
++-- tests/                           # Suite de tests unitarios (IMPLEMENTADO)
+    +-- patrones/                    # Tests de patrones
+    |   +-- singleton/
+    |   +-- factory/
+    |   +-- strategy/
+    |   +-- observer/
+    +-- servicios/                   # Tests de servicios
+    +-- persistencia/                # Tests de persistencia
+    +-- concurrencia/                # Tests de thread-safety
 ```
 
 ---
@@ -349,12 +403,56 @@ PythonEstacionamiento/
   - Valet: 30% recargo
   - Evento: 50% recargo
 
-### 4. Persistencia (Preparado)
+### 4. Sistema de Sensores (IMPLEMENTADO)
 
-- Arquitectura lista para:
-  - Guardado de historico de transacciones
-  - Recuperacion de datos persistidos
-  - Integracion con base de datos
+- **Sensor de Ocupacion**
+  - Monitoreo en tiempo real de plazas disponibles
+  - Alertas de capacidad critica (< 10% disponible)
+  - Tracking de ocupacion
+
+- **Sensor de Camara**
+  - Registro de patentes de entrada/salida
+  - Timestamp de cada deteccion
+  - Historial de registros capturados
+
+- **Sensor de Seguridad**
+  - Monitoreo de vehiculos activos
+  - Alertas de acceso denegado
+  - Validacion de autorizaciones de egreso
+
+### 5. Sistema de Persistencia (IMPLEMENTADO)
+
+- **Guardado de Estado**
+  - Serializacion completa del estacionamiento en JSON
+  - Guardado de vehiculos activos con timestamps
+  - Backup automatico del estado
+
+- **Carga de Estado**
+  - Recuperacion del estado desde JSON
+  - Reconstruccion de vehiculos usando Factory
+  - Restauracion de plazas ocupadas
+
+- **Gestion de Archivos**
+  - Creacion automatica de directorio `data/`
+  - Manejo robusto de errores de I/O
+  - Formato JSON legible e indentado
+
+### 6. Sistema de Logging (IMPLEMENTADO)
+
+- **Logging Multi-Destino**
+  - Consola: INFO y superior
+  - Archivo: DEBUG y superior (en `logs/`)
+  - Archivos diarios con timestamp
+
+- **Trazabilidad Completa**
+  - Registro de ingresos/egresos de vehiculos
+  - Tracking de eventos de sensores
+  - Logs de errores y excepciones
+
+- **Configuracion Centralizada**
+  - Logger configurado por modulo
+  - Formato consistente con timestamps
+  - Encoding UTF-8 para compatibilidad
 
 ---
 
@@ -450,15 +548,31 @@ Este proyecto replica la estructura de PythonForestal pero aplicado al dominio d
 
 ---
 
-## Proximos Pasos
+## Estado del Proyecto
 
-El sistema esta preparado para:
-- Integracion con sensores de ocupacion
-- Camaras de lectura de patentes
-- Persistencia de transacciones historicas
+### ✅ Completamente Implementado
+
+- ✅ **Patron Singleton**: ParkingLotManager y PricingRegistry
+- ✅ **Patron Factory**: VehiculoFactory con 3 tipos de vehiculos
+- ✅ **Patron Observer**: Sistema de sensores funcionando
+- ✅ **Patron Strategy**: 4 estrategias de precio
+- ✅ **Sistema de Sensores**: Ocupacion, Camaras y Seguridad
+- ✅ **Sistema de Persistencia**: Guardado/carga en JSON
+- ✅ **Sistema de Logging**: Multi-destino con archivos diarios
+- ✅ **Suite de Tests**: Tests unitarios completos
+- ✅ **Manejo de Excepciones**: Excepciones personalizadas
+- ✅ **Thread-Safety**: Singleton con double-checked locking
+
+### 🚀 Proximas Mejoras (Opcionales)
+
+- Integracion con hardware real de sensores
 - Integracion con app Android POS
 - Sistema de reservas online
 - Integracion con hardware de barreras
+- Dashboard web en tiempo real
+- API REST para integraciones externas
+- Base de datos relacional (actualmente JSON)
+- Sistema de reportes y estadisticas
 
 ---
 
@@ -468,6 +582,26 @@ Este proyecto es de codigo abierto con fines educativos.
 
 ---
 
-**Ultima actualizacion**: Octubre 2025
-**Version del sistema**: 1.0.0
+**Ultima actualizacion**: Noviembre 2025
+**Version del sistema**: 2.0.0
 **Python requerido**: 3.13+
+
+---
+
+## Changelog
+
+### Version 2.0.0 (Noviembre 2025)
+- ✅ **Implementacion completa del patron Observer**: Sistema de sensores funcionando
+- ✅ **3 Sensores implementados**: Ocupacion, Camaras y Seguridad
+- ✅ **Sistema de Persistencia**: Guardado/carga completo en JSON
+- ✅ **Sistema de Logging**: Multi-destino con archivos diarios
+- ✅ **ParkingLotManager como Observable**: Notifica eventos automaticamente
+- ✅ **Eventos del estacionamiento**: VehiculoIngresoEvento, VehiculoEgresoEvento, etc.
+- ✅ **Main.py actualizado**: Demostracion completa de todos los patrones
+- ✅ **README actualizado**: Refleja el estado real del proyecto
+
+### Version 1.0.0 (Octubre 2025)
+- Implementacion de patrones Singleton, Factory y Strategy
+- Estructura base del proyecto
+- Excepciones personalizadas
+- Suite de tests basica

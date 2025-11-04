@@ -1,8 +1,8 @@
 # Historias de Usuario - Sistema de Gestion de Estacionamiento
 
 **Proyecto**: PythonEstacionamiento
-**Version**: 1.0.0
-**Fecha**: Octubre 2025
+**Version**: 2.0.0
+**Fecha**: Noviembre 2025
 **Metodologia**: User Story Mapping
 
 ---
@@ -12,8 +12,10 @@
 1. [Epic 1: Gestion de Vehiculos](#epic-1-gestion-de-vehiculos)
 2. [Epic 2: Control del Estacionamiento](#epic-2-control-del-estacionamiento)
 3. [Epic 3: Sistema de Facturacion](#epic-3-sistema-de-facturacion)
-4. [Epic 4: Sistema Extensible con Sensores](#epic-4-sistema-extensible-con-sensores)
-5. [Historias Tecnicas (Patrones de Diseno)](#historias-tecnicas-patrones-de-diseno)
+4. [Epic 4: Sistema de Sensores (IMPLEMENTADO)](#epic-4-sistema-de-sensores-implementado)
+5. [Epic 5: Sistema de Persistencia (IMPLEMENTADO)](#epic-5-sistema-de-persistencia-implementado)
+6. [Epic 6: Sistema de Logging (IMPLEMENTADO)](#epic-6-sistema-de-logging-implementado)
+7. [Historias Tecnicas (Patrones de Diseno)](#historias-tecnicas-patrones-de-diseno)
 
 ---
 
@@ -509,31 +511,32 @@ precio = registry.calcular_precio(vehiculo, hora_ingreso, hora_egreso)
 
 ---
 
-## Epic 4: Sistema Extensible con Sensores
+## Epic 4: Sistema de Sensores (IMPLEMENTADO)
 
 ### US-013: Implementar Patron Observer Generico
 
 **Como** arquitecto del sistema
 **Quiero** implementar patron Observer con Generics
-**Para** preparar integracion con sensores de forma tipo-segura
+**Para** integrar sensores de forma tipo-segura
 
 #### Criterios de Aceptacion
 
 - [x] El sistema debe tener:
-  - Clase `Observable[T]` generica abstracta
-  - Interfaz `Observer[T]` generica abstracta
-  - Soporte para multiples observadores
-  - Tipo-seguridad con TypeVar
+  - Clase `Observable[T]` generica abstracta ✅
+  - Interfaz `Observer[T]` generica abstracta ✅
+  - Soporte para multiples observadores ✅
+  - Tipo-seguridad con TypeVar ✅
 - [x] Los metodos deben estar en español:
-  - `agregar_observador()`
-  - `eliminar_observador()`
-  - `notificar_observadores()`
-  - `actualizar()`
+  - `agregar_observador()` ✅
+  - `eliminar_observador()` ✅
+  - `notificar_observadores()` ✅
+  - `actualizar()` ✅
 
 #### Detalles Tecnicos
 
 **Clases**: `Observable[T]`, `Observer[T]`
 **Patron**: Observer
+**Estado**: ✅ IMPLEMENTADO
 
 **Implementacion Observable**:
 ```python
@@ -566,51 +569,287 @@ class Observer(Generic[T], ABC):
 
 ---
 
-### US-014: Preparar Sistema para Sensores de Ocupacion
+### US-014: Implementar Sistema de Eventos del Estacionamiento
 
-**Como** arquitecto del sistema
-**Quiero** preparar la arquitectura para sensores de ocupacion
-**Para** permitir expansion futura sin modificar codigo existente
+**Como** desarrollador del sistema
+**Quiero** tener eventos tipados para el estacionamiento
+**Para** que los sensores reciban informacion estructurada
 
 #### Criterios de Aceptacion
 
-- [x] El sistema debe:
-  - Tener paquete `sensores/` creado
-  - Implementar patron Observer generico
-  - Permitir agregar sensores sin modificar core
-  - Ser extensible para:
-    - Sensores de ocupacion de plazas
-    - Camaras de lectura de patentes
-    - Sensores de seguridad
-    - Alertas de incendio
+- [x] El sistema debe tener eventos:
+  - `VehiculoIngresoEvento` ✅
+  - `VehiculoEgresoEvento` ✅
+  - `PlazasAgotadasEvento` ✅
+  - `CapacidadCriticaEvento` ✅
+- [x] Eventos deben usar dataclasses ✅
+- [x] Eventos deben incluir timestamp ✅
+- [x] Eventos deben tener mensaje descriptivo ✅
 
 #### Detalles Tecnicos
 
-**Estructura preparada**:
-```
-python_estacionamiento/
-└── sensores/
-    ├── __init__.py
-    ├── sensor_ocupacion.py (futuro)
-    ├── sensor_camara.py (futuro)
-    └── sensor_seguridad.py (futuro)
-```
+**Archivo**: `python_estacionamiento/sensores/eventos.py`
+**Estado**: ✅ IMPLEMENTADO
 
-**Ejemplo de uso futuro**:
+**Implementacion**:
 ```python
-# Sensor seria Observable[int] (plazas disponibles)
-class SensorOcupacion(Observable[int]):
-    def leer_ocupacion(self):
-        plazas = self._detectar_plazas()
-        self.notificar_observadores(plazas)
+@dataclass
+class VehiculoIngresoEvento(EventoEstacionamiento):
+    vehiculo: Vehiculo
+    plazas_ocupadas: int
+    plazas_disponibles: int
 
-# Display seria Observer[int]
-class DisplayPlazas(Observer[int]):
-    def actualizar(self, plazas: int):
-        print(f"Plazas disponibles: {plazas}")
+@dataclass
+class VehiculoEgresoEvento(EventoEstacionamiento):
+    vehiculo: Vehiculo
+    plazas_ocupadas: int
+    plazas_disponibles: int
+    tiempo_estadia: str
 ```
 
-**Trazabilidad**: `main.py` lineas 149-156
+**Trazabilidad**: `python_estacionamiento/sensores/eventos.py`
+
+---
+
+### US-015: Implementar Sensor de Ocupacion
+
+**Como** operador del estacionamiento
+**Quiero** un sensor que monitoree la ocupacion en tiempo real
+**Para** conocer estado de plazas disponibles
+
+#### Criterios de Aceptacion
+
+- [x] Sensor debe implementar `Observer[EventoEstacionamiento]` ✅
+- [x] Debe procesar eventos de ingreso ✅
+- [x] Debe procesar eventos de egreso ✅
+- [x] Debe alertar cuando capacidad critica (< 10% disponible) ✅
+- [x] Debe mostrar plazas disponibles y ocupadas ✅
+
+#### Detalles Tecnicos
+
+**Clase**: `SensorOcupacion`
+**Archivo**: `python_estacionamiento/sensores/sensor_ocupacion.py`
+**Estado**: ✅ IMPLEMENTADO
+
+**Uso**:
+```python
+sensor = SensorOcupacion(umbral_critico=10)
+parking_manager.agregar_observador(sensor)
+
+# Automaticamente recibe notificaciones
+parking_manager.ingresar_vehiculo(vehiculo)
+```
+
+**Tests**: `tests/sensores/test_sensores.py`
+**Trazabilidad**: `main.py` lineas 215-260
+
+---
+
+### US-016: Implementar Sensor de Camara
+
+**Como** operador del estacionamiento
+**Quiero** camaras que registren patentes automaticamente
+**Para** tener historial de entradas y salidas
+
+#### Criterios de Aceptacion
+
+- [x] Sensor debe implementar `Observer[EventoEstacionamiento]` ✅
+- [x] Debe capturar patente en ingreso ✅
+- [x] Debe capturar patente en egreso ✅
+- [x] Debe registrar timestamp de cada captura ✅
+- [x] Debe mantener historial de registros ✅
+- [x] Debe ser consultable el historial ✅
+
+#### Detalles Tecnicos
+
+**Clase**: `SensorCamara`
+**Archivo**: `python_estacionamiento/sensores/sensor_camara.py`
+**Estado**: ✅ IMPLEMENTADO
+
+**Uso**:
+```python
+sensor_camara = SensorCamara(ubicacion="Principal")
+parking_manager.agregar_observador(sensor_camara)
+
+# Captura automaticamente
+parking_manager.ingresar_vehiculo(vehiculo)
+
+# Consultar registros
+registros = sensor_camara.get_registros()
+```
+
+**Tests**: `tests/sensores/test_sensores.py`
+**Trazabilidad**: `main.py` lineas 215-260
+
+---
+
+### US-017: Implementar Sensor de Seguridad
+
+**Como** operador del estacionamiento
+**Quiero** un sistema de seguridad que monitoree vehiculos
+**Para** controlar accesos y detectar anomalias
+
+#### Criterios de Aceptacion
+
+- [x] Sensor debe implementar `Observer[EventoEstacionamiento]` ✅
+- [x] Debe registrar vehiculos al ingresar ✅
+- [x] Debe liberar vehiculos al egresar ✅
+- [x] Debe alertar accesos denegados ✅
+- [x] Debe mantener lista de vehiculos monitoreados ✅
+- [x] Debe detectar intentos de salida no autorizados ✅
+
+#### Detalles Tecnicos
+
+**Clase**: `SensorSeguridad`
+**Archivo**: `python_estacionamiento/sensores/sensor_seguridad.py`
+**Estado**: ✅ IMPLEMENTADO
+
+**Uso**:
+```python
+sensor_seguridad = SensorSeguridad()
+parking_manager.agregar_observador(sensor_seguridad)
+
+# Monitorea automaticamente
+monitoreados = sensor_seguridad.get_vehiculos_monitoreados()
+alertas = sensor_seguridad.get_alertas()
+```
+
+**Tests**: `tests/sensores/test_sensores.py`
+**Trazabilidad**: `main.py` lineas 215-260
+
+---
+
+### US-018: Integrar ParkingLotManager como Observable
+
+**Como** arquitecto del sistema
+**Quiero** que ParkingLotManager notifique eventos automaticamente
+**Para** que sensores reciban actualizaciones en tiempo real
+
+#### Criterios de Aceptacion
+
+- [x] ParkingLotManager debe heredar de `Observable[EventoEstacionamiento]` ✅
+- [x] Debe notificar evento al ingresar vehiculo ✅
+- [x] Debe notificar evento al egresar vehiculo ✅
+- [x] Debe notificar evento de plazas agotadas ✅
+- [x] Debe notificar evento de capacidad critica ✅
+- [x] Debe permitir suscripcion de multiples sensores ✅
+
+#### Detalles Tecnicos
+
+**Clase**: `ParkingLotManager(Observable[EventoEstacionamiento])`
+**Archivo**: `python_estacionamiento/servicios/parking_lot_manager.py`
+**Estado**: ✅ IMPLEMENTADO
+
+**Implementacion**:
+```python
+class ParkingLotManager(Observable[EventoEstacionamiento]):
+    def ingresar_vehiculo(self, vehiculo: Vehiculo) -> None:
+        # ... logica de ingreso ...
+
+        # Notificar evento
+        evento = VehiculoIngresoEvento(...)
+        self.notificar_observadores(evento)
+```
+
+**Tests**: `tests/sensores/test_sensores.py`
+**Trazabilidad**: `parking_lot_manager.py:32`
+
+---
+
+## Epic 5: Sistema de Persistencia (IMPLEMENTADO)
+
+### US-019: Implementar Guardado de Estado en JSON
+
+**Como** operador del estacionamiento
+**Quiero** guardar el estado del sistema
+**Para** recuperarlo despues de un reinicio
+
+#### Criterios de Aceptacion
+
+- [x] Sistema debe serializar estado completo a JSON ✅
+- [x] Debe guardar vehiculos activos ✅
+- [x] Debe guardar plazas ocupadas ✅
+- [x] Debe guardar timestamps de ingreso/egreso ✅
+- [x] JSON debe ser legible e indentado ✅
+- [x] Debe crear directorio `data/` automaticamente ✅
+
+#### Detalles Tecnicos
+
+**Clase**: `JsonStorage`
+**Archivo**: `python_estacionamiento/persistencia/json_storage.py`
+**Estado**: ✅ IMPLEMENTADO
+
+**Uso**:
+```python
+parking_manager.guardar_estado()
+```
+
+**Tests**: `tests/persistencia/test_json_storage.py`
+
+---
+
+### US-020: Implementar Carga de Estado desde JSON
+
+**Como** operador del estacionamiento
+**Quiero** cargar el estado guardado
+**Para** continuar operaciones despues de reinicio
+
+#### Criterios de Aceptacion
+
+- [x] Sistema debe deserializar desde JSON ✅
+- [x] Debe reconstruir vehiculos usando Factory ✅
+- [x] Debe restaurar timestamps ✅
+- [x] Debe restaurar plazas ocupadas ✅
+- [x] Debe manejar errores gracefully ✅
+
+#### Detalles Tecnicos
+
+**Clase**: `JsonStorage`
+**Metodo**: `cargar_estado()`
+**Estado**: ✅ IMPLEMENTADO
+
+**Uso**:
+```python
+if parking_manager.cargar_estado():
+    print("Estado restaurado")
+```
+
+**Tests**: `tests/persistencia/test_json_storage.py`
+
+---
+
+## Epic 6: Sistema de Logging (IMPLEMENTADO)
+
+### US-021: Implementar Logging Centralizado
+
+**Como** desarrollador del sistema
+**Quiero** un sistema de logging centralizado
+**Para** tener trazabilidad de todas las operaciones
+
+#### Criterios de Aceptacion
+
+- [x] Sistema debe loggear a consola (INFO+) ✅
+- [x] Sistema debe loggear a archivo (DEBUG+) ✅
+- [x] Archivos de log diarios con timestamp ✅
+- [x] Formato consistente con timestamps ✅
+- [x] Encoding UTF-8 ✅
+- [x] Logger por modulo ✅
+
+#### Detalles Tecnicos
+
+**Archivo**: `python_estacionamiento/utils/logger.py`
+**Estado**: ✅ IMPLEMENTADO
+
+**Uso**:
+```python
+from python_estacionamiento.utils.logger import configurar_logger
+
+logger = configurar_logger('MiModulo')
+logger.info('Operacion exitosa')
+logger.error('Error detectado')
+```
+
+**Directorio de logs**: `logs/estacionamiento_YYYYMMDD.log`
 
 ---
 
@@ -818,29 +1057,40 @@ precio = registry.calcular_precio(vehiculo, ingreso, egreso)
 
 **Como** arquitecto de software
 **Quiero** implementar patron Observer con Generics
-**Para** preparar sistema para sensores y eventos futuros
+**Para** integrar sistema de sensores y eventos en tiempo real
 
 #### Criterios de Aceptacion
 
-- [x] Crear clase `Observable[T]` generica
-- [x] Crear interfaz `Observer[T]` generica
-- [x] Soportar multiples observadores
-- [x] Metodos: `agregar_observador()`, `eliminar_observador()`, `notificar_observadores()`
-- [x] Observadores tipo-seguros con TypeVar
-- [x] Metodos en español (notificar_observadores, actualizar)
+- [x] Crear clase `Observable[T]` generica ✅
+- [x] Crear interfaz `Observer[T]` generica ✅
+- [x] Soportar multiples observadores ✅
+- [x] Metodos: `agregar_observador()`, `eliminar_observador()`, `notificar_observadores()` ✅
+- [x] Observadores tipo-seguros con TypeVar ✅
+- [x] Metodos en español (notificar_observadores, actualizar) ✅
+- [x] ParkingLotManager como Observable ✅
+- [x] 3 sensores implementados: Ocupacion, Camara, Seguridad ✅
 
 #### Detalles Tecnicos
 
 **Clases**: `Observable[T]`, `Observer[T]`
 **Patron**: Observer
+**Estado**: ✅ COMPLETAMENTE IMPLEMENTADO
 
 **Ventajas**:
 - Tipo-seguro con Generics
 - Desacoplamiento total
 - Multiples observadores permitidos
-- Preparado para expansion con sensores reales
+- Sistema de sensores funcionando en produccion
 
-**Trazabilidad**: Archivos en `python_estacionamiento/patrones/observer/`
+**Sensores Implementados**:
+- `SensorOcupacion`: Monitorea plazas y alertas
+- `SensorCamara`: Registra patentes con timestamps
+- `SensorSeguridad`: Control de accesos y alertas
+
+**Trazabilidad**:
+- Patron: `python_estacionamiento/patrones/observer/`
+- Sensores: `python_estacionamiento/sensores/`
+- Tests: `tests/sensores/test_sensores.py`
 
 ---
 
@@ -850,35 +1100,67 @@ precio = registry.calcular_precio(vehiculo, ingreso, egreso)
 
 | Epic | Historias | Completadas | Cobertura |
 |------|-----------|-------------|-----------|
-| Epic 1: Gestion de Vehiculos | 4 | 4 | 100% |
-| Epic 2: Control del Estacionamiento | 3 | 3 | 100% |
-| Epic 3: Sistema de Facturacion | 5 | 5 | 100% |
-| Epic 4: Sistema Extensible con Sensores | 2 | 2 | 100% |
-| Historias Tecnicas (Patrones) | 5 | 5 | 100% |
-| **TOTAL** | **19** | **19** | **100%** |
+| Epic 1: Gestion de Vehiculos | 4 | 4 | 100% ✅ |
+| Epic 2: Control del Estacionamiento | 3 | 3 | 100% ✅ |
+| Epic 3: Sistema de Facturacion | 5 | 5 | 100% ✅ |
+| Epic 4: Sistema de Sensores | 6 | 6 | 100% ✅ |
+| Epic 5: Sistema de Persistencia | 2 | 2 | 100% ✅ |
+| Epic 6: Sistema de Logging | 1 | 1 | 100% ✅ |
+| Historias Tecnicas (Patrones) | 5 | 5 | 100% ✅ |
+| **TOTAL** | **26** | **26** | **100%** ✅ |
 
 ### Patrones de Diseno Cubiertos
 
-- [x] SINGLETON - ParkingLotManager y PricingRegistry
-- [x] FACTORY METHOD - VehiculoFactory
-- [x] OBSERVER - Sistema de sensores (preparado)
-- [x] STRATEGY - Estrategias de precio
+- [x] ✅ SINGLETON - ParkingLotManager y PricingRegistry (thread-safe)
+- [x] ✅ FACTORY METHOD - VehiculoFactory (3 tipos de vehiculos)
+- [x] ✅ OBSERVER - Sistema de sensores **COMPLETAMENTE IMPLEMENTADO**
+  - SensorOcupacion
+  - SensorCamara
+  - SensorSeguridad
+- [x] ✅ STRATEGY - 4 estrategias de precio intercambiables
 
 ### Funcionalidades Completas
 
-- [x] Gestion de 3 tipos de vehiculos (Moto, Auto, Camioneta)
-- [x] Control de plazas disponibles/ocupadas
-- [x] Ingreso y egreso de vehiculos
-- [x] 4 estrategias de precio intercambiables
-- [x] Patron Observer preparado para sensores
-- [x] Excepciones personalizadas
-- [x] PEP 8 compliance 100%
-- [x] Type hints con TYPE_CHECKING
-- [x] Constantes centralizadas
-- [x] Codigo limpio sin lambdas
+**Core del Sistema**:
+- [x] ✅ Gestion de 3 tipos de vehiculos (Moto, Auto, Camioneta)
+- [x] ✅ Control de plazas disponibles/ocupadas
+- [x] ✅ Ingreso y egreso de vehiculos
+- [x] ✅ 4 estrategias de precio intercambiables
+
+**Sistema de Sensores** (NUEVO):
+- [x] ✅ 3 sensores completamente funcionales
+- [x] ✅ Sistema de eventos tipados
+- [x] ✅ ParkingLotManager como Observable
+- [x] ✅ Notificaciones en tiempo real
+
+**Persistencia y Logging** (NUEVO):
+- [x] ✅ Guardado/carga de estado en JSON
+- [x] ✅ Sistema de logging multi-destino
+- [x] ✅ Archivos de log diarios
+
+**Calidad de Codigo**:
+- [x] ✅ Excepciones personalizadas
+- [x] ✅ PEP 8 compliance 100%
+- [x] ✅ Type hints con TYPE_CHECKING
+- [x] ✅ Constantes centralizadas
+- [x] ✅ Codigo limpio sin lambdas
+- [x] ✅ Suite completa de tests unitarios
+- [x] ✅ Tests para todos los patrones incluyendo sensores
 
 ---
 
-**Ultima actualizacion**: Octubre 2025
-**Estado**: COMPLETO
-**Cobertura funcional**: 100%
+**Ultima actualizacion**: Noviembre 2025
+**Version**: 2.0.0
+**Estado**: COMPLETAMENTE IMPLEMENTADO
+**Cobertura funcional**: 100% (26/26 historias)
+
+### Changelog vs Version 1.0.0
+
+**Nuevas Funcionalidades** (v2.0.0):
+- ✅ 6 nuevas user stories implementadas
+- ✅ Sistema de sensores completo (3 sensores)
+- ✅ Sistema de persistencia JSON
+- ✅ Sistema de logging centralizado
+- ✅ Tests completos para sensores
+- ✅ ParkingLotManager como Observable
+- ✅ 4 tipos de eventos del estacionamiento
