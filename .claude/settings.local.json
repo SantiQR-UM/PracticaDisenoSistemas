@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tar:*)",
+      "Bash(powershell -Command \"Expand-Archive -Path ''PythonForestal.zip'' -DestinationPath ''.'' -Force\")",
+      "Bash(dir:*)",
+      "Bash(mkdir:*)",
+      "Bash(python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,81 @@
+=============== SISTEMA DE GESTION DE ESTACIONAMIENTO ===============
+
+-------------- PATRON SINGLETON: Inicializando gestores --------------
+[OK] SINGLETON verificado: ParkingLotManager tiene instancia unica
+     ID de parking_manager1: 1193483931328
+     ID de parking_manager2: 1193483931328
+[OK] SINGLETON verificado: PricingRegistry tiene instancia unica
+     ID de pricing_registry1: 1193488110928
+     ID de pricing_registry2: 1193488110928
+
+----------------- PATRON FACTORY: Creando vehiculos -----------------
+
+1. Creando vehiculos usando VehiculoFactory...
+[OK] FACTORY verificado: Creados 3 vehiculos
+     - Moto: ABC123 (tarifa base: $50.0/hora)
+     - Auto: XYZ789 (tarifa base: $100.0/hora)
+     - Camioneta: DEF456 (tarifa base: $150.0/hora)
+
+-------------- Ingresando vehiculos al estacionamiento --------------
+
+Plazas disponibles antes del ingreso: 100
+[OK] Moto ABC123 ingresada
+[OK] Auto XYZ789 ingresado
+[OK] Camioneta DEF456 ingresada
+
+Plazas disponibles despues del ingreso: 97
+Plazas ocupadas: 3
+
+--------------- PATRON STRATEGY: Estrategias de precio ---------------
+
+2. Calculando precios con diferentes estrategias...
+   Vehiculo: Auto XYZ789
+   Tiempo de estadia: 2 horas
+
+   - Estrategia ESTANDAR: $175.0
+   - Estrategia HAPPY HOUR (20% desc): $140.0
+   - Estrategia VALET (30% rec): $227.5
+   - Estrategia EVENTO (50% rec): $262.5
+
+[OK] STRATEGY verificado: 4 estrategias implementadas y funcionando
+
+----------------- Egreso de vehiculos y facturacion -----------------
+
+3. Egresando vehiculos y calculando cobro...
+
+[OK] Moto ABC123 egresada
+     Precio a cobrar: $0.0
+
+[OK] Auto XYZ789 egresado
+     Precio a cobrar: $0.0
+
+[OK] Camioneta DEF456 egresada
+     Precio a cobrar: $0.0
+
+Plazas disponibles despues del egreso: 100
+Plazas ocupadas: 0
+
+---------------- PATRON OBSERVER: Sistema de sensores ----------------
+
+[INFO] El sistema esta preparado para integrar sensores:
+  - Sensores de ocupacion de plazas
+  - Camaras lectoras de patente
+  - Sensores de seguridad
+  - Todos implementando el patron Observer
+
+================== EJEMPLO COMPLETADO EXITOSAMENTE ==================
+
+  [OK] SINGLETON   - ParkingLotManager y PricingRegistry (instancias unicas)
+  [OK] FACTORY     - Creacion de vehiculos (Moto, Auto, Camioneta)
+  [OK] OBSERVER    - Sistema de sensores con metodos en español (preparado)
+  [OK] STRATEGY    - Estrategias de precio (Estandar, Happy Hour, Valet, Evento)
+======================================================================
+
+[INFO] Estructura del proyecto:
+  - python_estacionamiento/entidades/     : Entidades de dominio
+  - python_estacionamiento/servicios/     : Servicios de negocio
+  - python_estacionamiento/patrones/      : Implementaciones de patrones
+  - python_estacionamiento/sensores/      : Sistema de sensores (para expansion)
+  - python_estacionamiento/excepciones/   : Excepciones personalizadas
+  - python_estacionamiento/constantes.py  : Constantes centralizadas
+
